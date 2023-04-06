@@ -35,6 +35,9 @@
   <PropertyGroup>
     <StartupObject />
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Tekla Wh.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -49,26 +52,27 @@
     <Reference Include="System.Xml" />
     <Reference Include="Tekla.Structures, Version=2022.0.0.0, Culture=neutral, PublicKeyToken=2f04dbe497b71114, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files\Tekla Structures\2020.0\nt\bin\plugins\Tekla.Structures.dll</HintPath>
+      <HintPath>..\..\..\Tekla Structure\2020.0\nt\bin\plugins\Tekla.Structures.dll</HintPath>
     </Reference>
     <Reference Include="Tekla.Structures.Dialog, Version=2022.0.0.0, Culture=neutral, PublicKeyToken=2f04dbe497b71114, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files\Tekla Structures\2020.0\nt\bin\dialogs\Tekla.Structures.Dialog.dll</HintPath>
+      <HintPath>..\..\..\Tekla Structure\2020.0\nt\bin\dialogs\Tekla.Structures.Dialog.dll</HintPath>
     </Reference>
     <Reference Include="Tekla.Structures.Drawing, Version=2022.0.0.0, Culture=neutral, PublicKeyToken=2f04dbe497b71114, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files\Tekla Structures\2020.0\nt\bin\plugins\Tekla.Structures.Drawing.dll</HintPath>
+      <HintPath>..\..\..\Tekla Structure\2020.0\nt\bin\plugins\Tekla.Structures.Drawing.dll</HintPath>
     </Reference>
     <Reference Include="Tekla.Structures.Model, Version=2022.0.0.0, Culture=neutral, PublicKeyToken=2f04dbe497b71114, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files\Tekla Structures\2020.0\nt\bin\plugins\Tekla.Structures.Model.dll</HintPath>
+      <HintPath>..\..\..\Tekla Structure\2020.0\nt\bin\plugins\Tekla.Structures.Model.dll</HintPath>
     </Reference>
     <Reference Include="Tekla.Structures.Plugins, Version=2022.0.0.0, Culture=neutral, PublicKeyToken=2f04dbe497b71114, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files\Tekla Structures\2020.0\nt\bin\plugins\Tekla.Structures.Plugins.dll</HintPath>
+      <HintPath>..\..\..\Tekla Structure\2020.0\nt\bin\plugins\Tekla.Structures.Plugins.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Drawing\WHCastUnitDrawing.cs" />
     <Compile Include="Drawing\WHDrawingView.cs" />
     <Compile Include="WHLib.cs" />
     <Compile Include="MainForm.cs">
@@ -103,6 +107,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Tekla Wh.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

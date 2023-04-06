@@ -31,84 +31,119 @@ using Tekla.Structures.Drawing;
 
 using Tekla.Structures.ModelInternal;
 using System.Collections;
+using System.Data.Common;
+using PPVC_Drawing;
 
-namespace PPVC_Drawing
+namespace AutoDrawing
 {
-    public class WHCastUnitDrawing
+    public class VVHDrawingView
     {
-        public double WidthDrawing { get; set; }
-        public double HeightDrawing { get; set; }
-        public TSD.CastUnitDrawing castUnitDrawing { get; set; }
-        public TSG.CoordinateSystem coordinateSystem { get; set; }
-        public string drawingName { get; set; }
-        public string title1 { get; set; }
-        public string title2 { get; set; }
-        public string title3 { get; set; }
+        public TSD.Drawing drawing { get; set; }
+        public string ViewAtt { get; set; }
 
-        public WHCastUnitDrawing(TSM.ModelObject modelObject, string drawingAtt, string drawingName, string Title1, string Title2, string Title3)
+        public VVHDrawingView(string viewATT, TSD.Drawing wHDrawingView)
         {
-            TSG.CoordinateSystem coordinateSystem;
-            coordinateSystem = GetCoordinateSystemAndNameOfSelectedObject(modelObject);
-            if (modelObject is TSM.Part)
-            {
-                TSM.Part picap = modelObject as TSM.Part;
-                TSM.Assembly assembly = picap.GetAssembly();
-                castUnitDrawing = new TSD.CastUnitDrawing(assembly.Identifier, drawingAtt);
-            }
-            if (modelObject is TSM.Assembly)
-            {
-                TSM.Assembly assembly = (TSM.Assembly)modelObject;
-                castUnitDrawing = new TSD.CastUnitDrawing(assembly.Identifier, drawingAtt);
-            }
-            if (modelObject is TSM.Component)
-            {
-                TSM.Component component = modelObject as TSM.Component;
-                TSM.Assembly assembly = component.GetAssembly();
-                castUnitDrawing = new TSD.CastUnitDrawing(assembly.Identifier, drawingAtt);
-            }
-            castUnitDrawing.Insert();
-            castUnitDrawing.Layout.SheetSize.Width = WidthDrawing;
-            castUnitDrawing.Layout.SheetSize.Height = HeightDrawing;
-            drawingName = castUnitDrawing.Name = drawingName;
-            title1 = castUnitDrawing.Title1 = Title1;
-            title2 = castUnitDrawing.Title2 = Title2;
-            title3 = castUnitDrawing.Title3 = Title3;
-            castUnitDrawing.Modify();
-            castUnitDrawing.CommitChanges();
+            ViewAtt = viewATT;
+            drawing = wHDrawingView;
         }
 
-        private TSG.CoordinateSystem GetCoordinateSystemAndNameOfSelectedObject(TSM.ModelObject selectedModelObject)
+        public TSD.View AddView(TSD.Drawing mydrawing, ArrayList parts, TSG.CoordinateSystem coordinateSystem, double column, double row, double selectionX, double selectionY)
         {
-            TSG.CoordinateSystem coordinateSystem = new CoordinateSystem();
-            if (selectedModelObject is TSM.Part)
+            TSD.View view = new TSD.View(mydrawing.GetSheet(), coordinateSystem, coordinateSystem, parts, "standard");
+
+            TSD.View.CreateTopView(mydrawing, LocationPointView(column, row, selectionX, selectionY, "a3"), new TSD.View.ViewAttributes("standard"), out view);
+            view.Attributes.LoadAttributes(ViewAtt);
+            view.Modify();
+            return view;
+        }
+
+        public TSD.View AddSectionView(bool IsX, TSD.Drawing mydrawing, TSD.View viewplane, ArrayList parts, TSG.CoordinateSystem coordinateSystem, double column, double row, double selectionX, double selectionY)
+        {
+            WHLib luci = new WHLib();
+            TSM.Part part = parts[0] as TSM.Part;
+
+            List<TSG.Point> listPointPart = luci.FindTopFaceOfPartInMOdel(part, viewplane);
+            TransformationPlane planeview = new TransformationPlane(viewplane.DisplayCoordinateSystem);
+            TransformationPlane partplane = new TransformationPlane(part.GetCoordinateSystem());
+            TSG.Point pointmax = part.GetSolid().MaximumPoint;
+            TSG.Point pointmin = part.GetSolid().MinimumPoint;
+            TSG.Point pointmaxLocal = planeview.TransformationMatrixToLocal.Transform(pointmax);
+            TSG.Point pointminLocal = planeview.TransformationMatrixToLocal.Transform(pointmin);
+
+            double minX = pointminLocal.X;
+            double minY = pointminLocal.Y;
+
+            double maxX = pointmaxLocal.X;
+            double maxY = pointmaxLocal.Y;
+
+            TSG.Point pointXmin = new TSG.Point(minX, (minY + maxY) / 2, 0);
+            TSG.Point pointnXmax = new TSG.Point(maxX, (minY + maxY) / 2, 0);
+            TSG.Point pointSectionXmin = pointXmin;
+            TSG.Point pointSectionXmax = pointnXmax;
+
+            TSG.Point pointYmin = new TSG.Point((minX + maxX) / 2, minY - 100, 0);
+            TSG.Point pointYmax = new TSG.Point((maxX + minX) / 2, maxY + 100, 0);
+            TSG.Point pointSectionYmin = pointYmin;
+            TSG.Point pointSectionYmax = pointYmax;
+
+            TSD.View view = new TSD.View(mydrawing.GetSheet(), coordinateSystem, coordinateSystem, parts, "standard");
+
+            if (IsX)
             {
-                coordinateSystem = (selectedModelObject as TSM.Part).GetCoordinateSystem();
-            }
-            else if (selectedModelObject is TSM.Assembly)
-            {
-                coordinateSystem = (selectedModelObject as TSM.Assembly).GetCoordinateSystem();
-            }
-            else if (selectedModelObject is TSM.BaseComponent)
-            {
-                coordinateSystem = (selectedModelObject as TSM.BaseComponent).GetCoordinateSystem();
+                TSD.SectionMark sectionMark = new TSD.SectionMark(viewplane, pointSectionXmin, pointSectionXmax, new SectionMarkBase.SectionMarkAttributes("SECTION MARK_D"));
+                TSD.View.CreateSectionView(viewplane, pointSectionXmin, pointSectionXmax, LocationPointView(column, row, selectionX, selectionY, "a3"), Math.Abs(minX), Math.Abs(maxX),
+                    new TSD.View.ViewAttributes("CR106_SECTION"), new SectionMarkBase.SectionMarkAttributes("SECTION MARK_D"), out view, out sectionMark);
             }
             else
             {
-                coordinateSystem = new TSG.CoordinateSystem();
+                TSD.SectionMark sectionMark = new TSD.SectionMark(viewplane, pointSectionYmin, pointSectionYmax, new SectionMarkBase.SectionMarkAttributes("SECTION MARK_D"));
+                TSD.View.CreateSectionView(viewplane, pointSectionYmin, pointSectionYmax, LocationPointView(column, row, selectionX, selectionY, "a3"), Math.Abs(minX), maxX,
+                    new TSD.View.ViewAttributes("CR106_SECTION"), new SectionMarkBase.SectionMarkAttributes("SECTION MARK_D"), out view, out sectionMark);
             }
-            return coordinateSystem;
+
+            view.Attributes.LoadAttributes("CR106_SECTION");
+            view.Modify();
+            return view;
         }
 
-        public WHCastUnitDrawing(TSM.ModelObject modelObject, string drawingAtt)
+        public TSG.Point LocationPointView(double column, double row, double selectX, double selectY, string paperSize)
         {
-            var mainPart = modelObject as TSM.Part;
-            Assembly assembly = mainPart.GetAssembly();
-            castUnitDrawing = new TSD.CastUnitDrawing(assembly.Identifier, drawingAtt);
-            castUnitDrawing.Insert();
-            if (castUnitDrawing.CommitChanges())
+            TSG.Point location = new TSG.Point();
+            double paperHeight = 0.0;
+            double paperWidth = 0.0;
+            double rightDrawingFrameWidth = 53.0;
+            switch (paperSize)
             {
-                Console.WriteLine("created");
+                case "a1":
+                    paperHeight = 594.0;
+                    paperWidth = 841.0;
+                    break;
+
+                case "a2":
+                    paperHeight = 420.0;
+                    paperWidth = 594;
+                    break;
+
+                case "a3":
+                    paperHeight = 297.0;
+                    paperWidth = 420.0 - rightDrawingFrameWidth;
+                    break;
+
+                case "a4":
+                    paperHeight = 210.0;
+                    paperWidth = 297.0;
+                    break;
+
+                default:
+                    break;
             }
+
+            double hightCell = paperHeight / row;
+            double wightCell = paperWidth / column;
+            location.X = wightCell * selectX - wightCell / 2;
+            location.Y = hightCell * selectY - hightCell / 2;
+            location.Z = 0;
+            return location;
         }
     }
 }
